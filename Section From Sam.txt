@@ -1,0 +1,122 @@
+Code section from Sam
+
+1.To create base table(full column)
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS parking_2014 (
+Summons_Number int,
+Plate_ID string,
+Registration_State string,
+Plate_Type string,
+Issue_Date string,
+Violation_Code int,
+Vehicle_Body_Type string,
+Vehicle_Make string,
+Issuing_Agency char(255),
+Street_Code1 int,
+Street_Code2 int,
+Street_Code3 int,
+Vehicle_Expiration_Date int,
+Violation_Location int,
+Violation_Precinct int,
+Issuer_Precinct int,
+Issuer_Code int,
+Issuer_Command int,
+Issuer_Squad int,
+Violation_Time string,
+Time_First_Observed string,
+Violation_County string,
+Violation_In_Front_Of_Or_Opposite char(255),
+House_Number string,
+Street_Name string,
+Intersecting_Street string,
+Date_First_Observed int,
+Law_Section int,
+Sub_Division string,
+Violation_Legal_Code string,
+Days_Parking_In_Effect string,
+From_Hours_In_Effect string,
+To_Hours_In_Effect string,
+Vehicle_Color string,
+Unregistered_Vehicle int,
+Vehicle_Year int,
+Meter_Number char(255),
+Feet_From_Curb int,
+Violation_Post_Code string,
+Violation_Description string,
+No_Standing_or_Stopping_Violation string,
+Hydrant_Violation string,
+Double_Parking_Violation string,
+Latitude string,
+Longitude string,
+Community_Board string,
+Community_Council string,
+Census_Tract string,
+BIN string,
+BBL string,
+NTA string)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS TEXTFILE LOCATION '/user/ maria_dev /tmp/data/'
+TBLPROPERTIES('skip.header.line.count'='1');
+
+2.LOAD DATA INPATH '/user/raj_ops/data/2014parking.csv' OVERWRITE INTO TABLE parking_2014;
+
+3.To filter table
+CREATE  TABLE IF NOT EXISTS event001
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS TEXTFILE LOCATION '/user/ maria_dev /tmp/data10'
+AS
+SELECT Registration_State,
+Issue_Date,
+Plate_Type,
+Vehicle_Body_Type,
+Vehicle_Make,
+Vehicle_Expiration_Date,
+Violation_Time,
+Violation_County,
+Vehicle_Color,
+Vehicle_Year
+FROM parking_2014;
+
+
+4.To look for those worriest plate ID
+ 
+CREATE TABLE IF NOT EXISTS event055
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS TEXTFILE LOCATION '/user/ maria_dev /tmp/data60'
+AS
+SELECT Registration_State ,Plate_ID,Plate_Type, COUNT(*)  as Total
+FROM event001
+GROUP BY Registration_State ,Plate_ID,Plate_Type
+ORDER BY Total DESC;
+
+
+5.To create View for joined table
+Create view if not exists  ticket2
+AS select * from event055;
+
+6.To find out more detail about top violation palte ID
+To create join table
+Create table if not exists list00
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+STORED AS TEXTFILE LOCATION '/user/ maria_dev /tmp/data30'
+
+As select 
+e.Registration_State,
+t.Plate_ID,
+e.Issue_Date,
+t.Plate_Type,
+e.Vehicle_Body_Type,
+e.Vehicle_Make,
+e.Vehicle_Expiration_Date,
+e.Violation_Time,
+e.Violation_County,
+e.Vehicle_Color,
+e.Vehicle_Year,
+t.total
+From ticket2 t join 
+ event001 e On ( e.Plate_ID = t.Plate_ID)
+ORDER BY t.total DESC;
+
+
+
